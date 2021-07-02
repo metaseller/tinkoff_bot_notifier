@@ -16,7 +16,7 @@ class BotController extends Controller
         $telegram = new TelegramHelper();
 
         while (true) {
-            $telegram->checkCommands();
+            $telegram->getUpdates();
             TinkoffController::checkStocks();
             sleep(self::CONST_TIME_DELAY_REQUEST);
         }

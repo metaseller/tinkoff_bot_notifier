@@ -6,16 +6,6 @@ class TelegramHelper
 {
     private $lastMessageId = 0;
     private $botToken = "1773680987:AAG8q5LPSzxkA8g502jBEiPp1s-O0GWKTfU";
-    public function checkCommands() {
-
-
-        $request = "https://api.telegram.org/bot/getUpdates?offset=-1";
-
-        //$this->sendMessage();
-        $this->getUpdates();
-        echo "\ngetUpdates\n";
-
-    }
 
 
     public function sendMessage($textMessage = "This is my message !!!", $chatId = 442912517){
@@ -35,6 +25,8 @@ class TelegramHelper
     }
 
     public function getUpdates(){
+        echo "\ngetUpdates\n";
+
         $website = "https://api.telegram.org/bot" . $this->botToken;
 
         $ch = curl_init($website . '/getUpdates?offset=-1');
@@ -51,10 +43,16 @@ class TelegramHelper
         if($this->isAlreadyViewed($result)){
             echo $result->message->text;
         }else{
+
             $this->sendMessage("Сообщение получино и обработано", $result->message->from->id);
             $this->lastMessageId = $result->update_id;
-            $this->foundCommands($result->message->text);
+            //$this->foundCommands($result->message->text);
             echo $result->message->text;
+
+            return [
+                    "id_telegram" => $result->message->from->id,
+                    "text" => $result->message->text
+                   ];
         }
     }
 
@@ -65,10 +63,7 @@ class TelegramHelper
         return $result->update_id == $this->lastMessageId;
     }
 
-    private function foundCommands($text)
-    {
 
-    }
 
 }
 
