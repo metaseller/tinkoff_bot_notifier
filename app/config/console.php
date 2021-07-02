@@ -14,6 +14,10 @@ $config = [
         '@tests' => '@app/tests',
     ],
     'components' => [
+        'telegram' => [
+            'class' => 'aki\\telegram\\Telegram',
+            'botToken' => '1773680987:AAG8q5LPSzxkA8g502jBEiPp1s-O0GWKTfU',
+        ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
@@ -26,6 +30,7 @@ $config = [
             ],
         ],
         'db' => $db,
+
     ],
     'params' => $params,
     /*
