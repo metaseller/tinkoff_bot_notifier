@@ -5,7 +5,7 @@ namespace app\helpers;
 class TelegramHelper
 {
     private $lastMessageId = 0;
-    private $botToken = "1773680987:AAG8q5LPSzxkA8g502jBEiPp1s-O0GWKTfU";
+    private $botToken = TELEGRAM_TOKEN;
 
     public function getCommand() {
 
