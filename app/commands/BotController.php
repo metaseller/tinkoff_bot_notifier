@@ -32,12 +32,10 @@ class BotController extends Controller
         echo "Bot started.";
 
         $telegram = new TelegramHelper();
-
         while (true) {
             $command = $telegram->getCommand();
             $this->interpretCommand($telegram, $command);
 
-            TinkoffController::checkStocks();
             sleep(self::CONST_TIME_DELAY_REQUEST);
         }
     }
