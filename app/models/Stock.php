@@ -11,7 +11,6 @@ class Stock extends ActiveRecord
     public $interval;
     public $change;
     public $user_id;
-    public $id;
 
     public function attributeLabels()
     {

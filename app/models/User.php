@@ -8,7 +8,6 @@ class User extends ActiveRecord
 {
     public $iduser;
     public $token;
-    public $id;
     public function attributeLabels()
     {
         return [
