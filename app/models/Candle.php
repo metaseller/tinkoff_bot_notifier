@@ -13,7 +13,6 @@ class Candle extends ActiveRecord
     public $prcmax;
     public $tradevolume;
     public $timeq;
-    public $id;
     public $stock_id;
 
     public function attributeLabels()
