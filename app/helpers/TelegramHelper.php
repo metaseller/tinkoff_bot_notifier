@@ -50,6 +50,7 @@ class TelegramHelper
         $result = json_decode($result);
         if (!empty($result->result)) {
             $result = $result->result[0];
+            print_r($result);
             if (!$this->isAlreadyViewed($result)) {
                 $this->lastMessageId = $result->update_id;
 

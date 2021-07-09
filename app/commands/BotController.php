@@ -26,10 +26,16 @@ class BotController extends Controller
                     $user->save();
                     $telegram->sendMessage('Вы зарегистрированы. Напишите /help, чтобы получить список команд.', $command['id_telegram']);
                 }
+                else {
+                    $telegram->sendMessage('Вы не зарегистрированы. Напишите /start, чтобы зарегистрироваться.', $command['id_telegram']);
+                }
             }
             else {
                 $user = User::findOne(['iduser' => $command['id_telegram']]);
-                if ($command['command_name'] == 'token' && count($command['parameters']) == 1) {
+                if ($command['command_name'] == 'start') {
+                    $telegram->sendMessage('Вы уже зарегистрированы. Напишите /help, чтобы получить список команд.', $command['id_telegram']);
+                }
+                elseif ($command['command_name'] == 'token' && count($command['parameters']) == 1) {
                     $token = $command['parameters'][0];
                     $tinkoff->isTokenLegit($token);
                     if ($tinkoff->isTokenLegit($token)) {
@@ -41,8 +47,16 @@ class BotController extends Controller
                         $telegram->sendMessage('Некорректный токен.', $command['id_telegram']);
                     }
                 }
-                if (!$user->token == null) {
-                    if ($command['command_name'] == 'addstock' && count($command['parameters']) == 1) {
+                elseif ($command['command_name'] == 'help') {
+                    $telegram->sendMessage('/token [Tinkoff Invest токен] - передать свой токен Tinkoff Invest API. Идущие далее команды работают только в том случае, если вы передали токен.' .PHP_EOL.
+                        '/addstock [figi акции] - отслеживать акцию' .PHP_EOL.
+                        '/removestock [figi акции] - перестать отслеживать акцию' .PHP_EOL.
+                        '/stocks - получить список отслеживаемых акций'.PHP_EOL.
+                        '/interval [figi акции] [интервал] - поменять интервал получения новых свечей (допустимые интервалы:  1min, 2min, 3min, 5min, 10min, 15min, 30min, hour, day, week, month)'.PHP_EOL.
+                        '/priceshift [figi акции] [процент] - поменять процент "критического" сдвига'.PHP_EOL.
+                        '/period [figi акции] [период] - поменять период средней скользящей', $command['id_telegram']);
+                }
+                elseif ($command['command_name'] == 'addstock' && count($command['parameters']) == 1 && !$user->token == null) {
                         $figi = $command['parameters'][0];
                         if ($tinkoff->isFigiExist($user->token, $figi)) {
                             $stock = new Stock();
@@ -55,7 +69,7 @@ class BotController extends Controller
                             $telegram->sendMessage('Такой акции не существует.', $command['id_telegram']);
                         }
                     }
-                    if ($command['command_name'] == 'removestock' && count($command['parameters']) == 1) {
+                elseif ($command['command_name'] == 'removestock' && count($command['parameters']) == 1 && !$user->token == null) {
                         $figi = $command['parameters'][0];
                         $stock = Stock::findOne(['user_id' => $user->id, 'figi' => $figi]);
                         if ($stock) {
@@ -66,7 +80,7 @@ class BotController extends Controller
                             $telegram->sendMessage('Вы не отслеживаете такую акцию.', $command['id_telegram']);
                         }
                     }
-                    if ($command['command_name'] == 'stocks' && count($command['parameters']) == 0) {
+                elseif ($command['command_name'] == 'stocks' && count($command['parameters']) == 0 && !$user->token == null) {
                         $message = 'Отслеживаемые вами акции: ';
                         $stocks = Stock::find()->where(['user_id' => $user->id])->asArray()->all();
                         if (!empty($stocks)) {
@@ -80,7 +94,7 @@ class BotController extends Controller
                             $telegram->sendMessage('Вы не отслеживаете акции.', $command['id_telegram']);
                         }
                     }
-                    if ($command['command_name'] == 'priceshift' && count($command['parameters']) == 2) {
+                elseif ($command['command_name'] == 'priceshift' && count($command['parameters']) == 2 && !$user->token == null) {
                         $figi = $command['parameters'][0];
                         $change = $command['parameters'][1];
                         $stock = Stock::findOne(['user_id' => $user->id, 'figi' => $figi]);
@@ -93,7 +107,7 @@ class BotController extends Controller
                             $telegram->sendMessage('Вы не отслеживаете такую акцию.', $command['id_telegram']);
                         }
                     }
-                    if ($command['command_name'] == 'period' && count($command['parameters']) == 2) {
+                elseif ($command['command_name'] == 'period' && count($command['parameters']) == 2 && !$user->token == null) {
                         $figi = $command['parameters'][0];
                         $period = $command['parameters'][1];
                         $stock = Stock::findOne(['user_id' => $user->id, 'figi' => $figi]);
@@ -108,10 +122,10 @@ class BotController extends Controller
                             }
                         }
                         else{
-                            $telegram->sendMessage('Вы не отслеживаете такую акцию.', $command['id_telegram']);
+                            $telegram->sendMessage('Вы не отслеживаете такую акцию.', $command['id_telegram'] && !$user->token == null);
                         }
                     }
-                    if ($command['command_name'] == 'interval' && count($command['parameters']) == 2) {
+                elseif ($command['command_name'] == 'interval' && count($command['parameters']) == 2 && !$user->token == null) {
                         $figi = $command['parameters'][0];
                         $interval = $command['parameters'][1];
                         $stock = Stock::findOne(['user_id' => $user->id, 'figi' => $figi]);
@@ -129,15 +143,8 @@ class BotController extends Controller
                             $telegram->sendMessage('Вы не отслеживаете такую акцию.', $command['id_telegram']);
                         }
                     }
-                }
-                if ($command['command_name'] == 'help') {
-                    $telegram->sendMessage('/token [Tinkoff Invest токен] - передать свой токен Tinkoff Invest API. Идущие далее команды работают только в том случае, если вы передали токен.' .PHP_EOL.
-                                            '/addstock [figi акции] - отслеживать акцию' .PHP_EOL.
-                                            '/removestock [figi акции] - перестать отслеживать акцию' .PHP_EOL.
-                                            '/stocks - получить список отслеживаемых акций'.PHP_EOL.
-                                            '/interval [figi акции] [интервал] - поменять интервал получения новых свечей (допустимые интервалы:  1min, 2min, 3min, 5min, 10min, 15min, 30min, hour, day, week, month)'.PHP_EOL.
-                                            '/priceshift [figi акции] [процент] - поменять процент "критического" сдвига'.PHP_EOL.
-                                            '/period [figi акции] [период] - поменять период средней скользящей', $command['id_telegram']);
+                else {
+                    $telegram->sendMessage('Команда не распознана, или вы не передали токен.', $command['id_telegram']);
                 }
             }
         }
