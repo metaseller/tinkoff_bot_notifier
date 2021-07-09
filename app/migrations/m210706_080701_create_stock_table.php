@@ -18,8 +18,8 @@ class m210706_080701_create_stock_table extends Migration
         $this->createTable('{{%stock}}', [
             'id' => $this->primaryKey(),
             'figi' => $this->string(200)->notNull(),
-            'interval' => $this->string(100)->notNull(),
-            'change' => $this->integer()->notNull(),
+            'interval' => $this->string(100)->notNull()->defaultValue('day'),
+            'change' => $this->double()->notNull()->defaultValue(10.0),
             'user_id' => $this->integer()->notNull(),
         ]);
 

@@ -12,9 +12,9 @@ class TelegramHelper
         $message = $this->getUpdates();
         if ($message != null) {
             if (substr($message['text'], 0, 1) === '/') {
-                preg_match_all('/(\w+)/', $message['text'], $matches);
-                $command_name = $matches[0][0];
-                $parameters = array_slice($matches[0], 1);
+                $matches = explode(' ', $message['text']);
+                $command_name = substr($matches[0], 1);
+                $parameters = array_slice($matches, 1);
                 return ['id_telegram' => $message['id_telegram'], 'command_name' => $command_name, 'parameters' => $parameters];
             }
         }
@@ -48,14 +48,10 @@ class TelegramHelper
         $result = curl_exec($ch);
         curl_close($ch);
         $result = json_decode($result);
-        if ($result) {
+        if (!empty($result->result)) {
             $result = $result->result[0];
-            if ($this->isAlreadyViewed($result)) {
-                echo $result->message->text;
-            }
-            else {
+            if (!$this->isAlreadyViewed($result)) {
                 $this->lastMessageId = $result->update_id;
-                echo $result->message->text;
 
                 return [
                     'id_telegram' => $result->message->from->id,
@@ -66,12 +62,7 @@ class TelegramHelper
     }
 
     public function isAlreadyViewed($result) {
-
-        // todo вытащить из базы данных инфу об этом сообщении, обработали ли мы его когда то?
-        // и проверка человека, новый ли он?
-
         return $result->update_id == $this->lastMessageId;
-
     }
 
 }

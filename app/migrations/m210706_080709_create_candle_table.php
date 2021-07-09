@@ -17,10 +17,10 @@ class m210706_080709_create_candle_table extends Migration
     {
         $this->createTable('{{%candle}}', [
             'id' => $this->primaryKey(),
-            'prcopen' => $this->integer(),
-            'prcclose' => $this->integer(),
-            'prcmin' => $this->integer(),
-            'prcmax' => $this->integer(),
+            'prcopen' => $this->double(),
+            'prcclose' => $this->double(),
+            'prcmin' => $this->double(),
+            'prcmax' => $this->double(),
             'tradevolume' => $this->integer(),
             'timeq' => $this->datetime()->notNull(),
             'stock_id' => $this->integer()->notNull(),

@@ -1,41 +1,41 @@
 <?php
 namespace app\helpers;
 
-use http\Client;
-
-use yii\console\Controller;
+use Exception;
 use \jamesRUS52\TinkoffInvest\TIClient;
+use jamesRUS52\TinkoffInvest\TIException;
 use \jamesRUS52\TinkoffInvest\TISiteEnum;
-use \jamesRUS52\TinkoffInvest\TICurrencyEnum;
-use \jamesRUS52\TinkoffInvest\TIInstrument;
-use \jamesRUS52\TinkoffInvest\TIPortfolio;
-use \jamesRUS52\TinkoffInvest\TIOperationEnum;
 use \jamesRUS52\TinkoffInvest\TIIntervalEnum;
-use \jamesRUS52\TinkoffInvest\TICandleIntervalEnum;
-use \jamesRUS52\TinkoffInvest\TICandle;
-use \jamesRUS52\TinkoffInvest\TIOrderBook;
-use \jamesRUS52\TinkoffInvest\TIInstrumentInfo;
 
 use \app\models\Candle;
 use \app\models\User;
 use \app\models\Stock;
 
 
-
 class TinkoffHelper
 {
-    public static function isTickerExist($ticker ="SBER", $tinkoff_token)
+    public function isTokenLegit($tinkoff_token) {
+        try {
+            $client = new TIClient($tinkoff_token, TISiteEnum::SANDBOX);
+            $client->getStocks();
+        }
+        catch (TIException $e) {
+            return false;
+        }
+        return true;
+    }
+    public function isFigiExist($tinkoff_token=TINKOFF_TOKEN, $figi ="SBER")
     {
-        $client = new TIClient(TINKOFF_TOKEN, TISiteEnum::SANDBOX);
+        $client = new TIClient($tinkoff_token, TISiteEnum::SANDBOX);
         $all_stocks = $client->getStocks(); //Получаем массив со всеми тикерами.
 
         foreach ($all_stocks as $stock) {
-            if ($stock->getTicker() == $ticker) return true;
-            else return false;
+            if ($stock->getFigi() == $figi) return true;
         }
+        return false;
     }
 
-    public static function isPriceShift($candle, $percent=5){
+    public function isPriceShift($candle, $percent=5){
         if ($candle instanceof Candle)
         {
             $shift = $candle->prcopen * $percent / 100;
@@ -44,12 +44,12 @@ class TinkoffHelper
         }
     }
 
-    public static function addCandle($stock_id, $interval=TIIntervalEnum::MIN10,$tinkoff_token=TINKOFF_TOKEN){
+    public function addCandle($stock_id, $interval=TIIntervalEnum::MIN10,$tinkoff_token=TINKOFF_TOKEN){
         $TIclient = new TIClient($tinkoff_token, TISiteEnum::SANDBOX);
 
         $TIcandle = $TIclient->getCandle($stock_id->figi, $interval);
 
-        $candle = new Candle;
+        $candle = new Candle();
         $candle->prcopen = $TIcandle->getOpen();
         $candle->prcclose = $TIcandle->getClose();
         $candle->prcmin = $TIcandle->getLow();
@@ -60,7 +60,7 @@ class TinkoffHelper
         $candle->save();
     }
 
-    public static function checkStocks()
+    public function checkStocks()
     {
         $users = User::findAll() // Получаем массив всех юзеров, сортируя по id.
         ->orderBy('id');
