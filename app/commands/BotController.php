@@ -3,7 +3,6 @@
 namespace app\commands;
 
 use app\helpers\TinkoffHelper;
-use app\models\Candle;
 use app\models\Stock;
 use app\models\User;
 use yii\console\Controller;
@@ -154,6 +153,10 @@ class BotController extends Controller
         while (true) {
             $command = $telegram->getCommand();
             $this->interpretCommand($telegram, $tinkoff, $command);
+//            $messages = $tinkoff->checkStocks();
+//            foreach ($messages as $message) {
+//                $telegram->sendMessage($message['text'], $message['id_telegram']);
+//            }
             sleep(self::CONST_TIME_DELAY_REQUEST);
         }
     }
