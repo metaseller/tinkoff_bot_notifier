@@ -126,7 +126,7 @@ class BotController extends Controller
                             }
                         }
                         else{
-                            $telegram->sendMessage('Вы не отслеживаете такую акцию.', $command['id_telegram'] && !$user->token == null);
+                            $telegram->sendMessage('Вы не отслеживаете такую акцию.', $command['id_telegram']);
                         }
                     }
                 elseif ($command['command_name'] == 'interval' && count($command['parameters']) == 2 && !$user->token == null) {
