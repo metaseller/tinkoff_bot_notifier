@@ -70,7 +70,7 @@ class BotController extends Controller
                 }
                 elseif ($command['command_name'] == 'addstock' && count($command['parameters']) == 1 && !$user->token == null) {
                         $ticker = $command['parameters'][0];
-                        if (!count(Stock::find()->where(['user_id' => $user->id])->all()) == self::MAX_STOCKS) {
+                        if (count(Stock::find()->where(['user_id' => $user->id])->all()) != self::MAX_STOCKS) {
                             if ($tinkoff->isTickerExist($user->token, $ticker)) {
                                 $stock = new Stock();
                                 $stock->ticker = $ticker;
