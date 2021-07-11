@@ -16,6 +16,7 @@ include '../env.php';
 class BotController extends Controller
 {
     const CONST_TIME_DELAY_REQUEST = 1;
+    const MAX_STOCKS = 3;
     const INTERVALS = ['1min', '2min', '3min', '5min', '10min', '15min', '30min', 'hour', 'day', 'week', 'month'];
 
     public function deleteCandles($stock) {
@@ -69,16 +70,20 @@ class BotController extends Controller
                 }
                 elseif ($command['command_name'] == 'addstock' && count($command['parameters']) == 1 && !$user->token == null) {
                         $ticker = $command['parameters'][0];
-                        if ($tinkoff->isTickerExist($user->token, $ticker)) {
-                            $stock = new Stock();
-                            $stock->ticker = $ticker;
-                            $stock->figi = $tinkoff->getFigiByTicker($user->token, $ticker);
-                            $stock->user_id = $user->id;
-                            $stock->save();
-                            $telegram->sendMessage('Акция теперь отслеживается.', $command['id_telegram']);
+                        if (count(Stock::find()->where(['user_id' => $user->id])->all()) == self::MAX_STOCKS) {
+                            if ($tinkoff->isTickerExist($user->token, $ticker)) {
+                                $stock = new Stock();
+                                $stock->ticker = $ticker;
+                                $stock->figi = $tinkoff->getFigiByTicker($user->token, $ticker);
+                                $stock->user_id = $user->id;
+                                $stock->save();
+                                $telegram->sendMessage('Акция теперь отслеживается.', $command['id_telegram']);
+                            } else {
+                                $telegram->sendMessage('Такой акции не существует.', $command['id_telegram']);
+                            }
                         }
-                        else{
-                            $telegram->sendMessage('Такой акции не существует.', $command['id_telegram']);
+                        else {
+                            $telegram->sendMessage('Вы не можете отслеживать больше, чем '. self::MAX_STOCKS. ' акции.' , $command['id_telegram']);
                         }
                     }
                 elseif ($command['command_name'] == 'removestock' && count($command['parameters']) == 1 && !$user->token == null) {
