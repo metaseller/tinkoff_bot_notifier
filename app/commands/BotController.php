@@ -3,6 +3,7 @@
 namespace app\commands;
 
 use app\helpers\TinkoffHelper;
+use app\models\Candle;
 use app\models\Stock;
 use app\models\User;
 use yii\console\Controller;
@@ -16,6 +17,13 @@ class BotController extends Controller
 {
     const CONST_TIME_DELAY_REQUEST = 1;
     const INTERVALS = ['1min', '2min', '3min', '5min', '10min', '15min', '30min', 'hour', 'day', 'week', 'month'];
+
+    public function deleteCandles($stock) {
+        $candles = Candle::find()->where(['stock_id'=>$stock->id])->all();
+        foreach($candles as $candle) {
+            $candle->delete();
+        }
+    }
 
     public function interpretCommand($telegram, $tinkoff, $command) {
         if ($command != null) {
@@ -104,6 +112,7 @@ class BotController extends Controller
                         $stock = Stock::findOne(['user_id' => $user->id, 'ticker' => $ticker]);
                         if ($stock) {
                             $stock->change = $change;
+                            $this->deleteCandles($stock);
                             $stock->save();
                             $telegram->sendMessage('Присвоен новый сдвиг цены.', $command['id_telegram']);
                         }
@@ -136,6 +145,7 @@ class BotController extends Controller
                         if ($stock) {
                             if (in_array($interval, self::INTERVALS)) {
                                 $stock->interval = $interval;
+                                $this->deleteCandles($stock);
                                 $stock->save();
                                 $telegram->sendMessage('Присвоен новый интервал.', $command['id_telegram']);
                             }
