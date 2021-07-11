@@ -163,10 +163,11 @@ class BotController extends Controller
         while (true) {
             $command = $telegram->getCommand();
             $this->interpretCommand($telegram, $tinkoff, $command);
-//            $messages = $tinkoff->checkStocks();
-//            foreach ($messages as $message) {
-//                $telegram->sendMessage($message['text'], $message['id_telegram']);
-//            }
+            $results = $tinkoff->checkStocks();
+            foreach ($results as $result) {
+                $message = 'Цена акции '. $result['stock']->figi . ' изменилась на ' . $result['percent'] . '!';
+                $telegram->sendMessage($message, $result['user']->iduser);
+            }
             sleep(self::CONST_TIME_DELAY_REQUEST);
         }
     }

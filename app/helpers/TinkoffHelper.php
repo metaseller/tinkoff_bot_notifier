@@ -44,46 +44,62 @@ class TinkoffHelper
         }
     }
 
-    public function addCandle($stock_id, $interval=TIIntervalEnum::MIN10,$tinkoff_token=TINKOFF_TOKEN){
+    public function addCandle($stock, $interval=TIIntervalEnum::MIN10,$tinkoff_token=TINKOFF_TOKEN){
         $TIclient = new TIClient($tinkoff_token, TISiteEnum::SANDBOX);
+        try {
+            $TIcandle = $TIclient->getCandle($stock->figi, $interval);
 
-        $TIcandle = $TIclient->getCandle($stock_id->figi, $interval);
+            $candle = new Candle();
+            $candle->prcopen = $TIcandle->getOpen();
+            $candle->prcclose = $TIcandle->getClose();
+            $candle->prcmin = $TIcandle->getLow();
+            $candle->prcmax = $TIcandle->getHigh();
+            $candle->tradevolume = $TIcandle->getVolume();
+            $candle->timeq = $TIcandle->getTime();
+            $candle->stock_id = $stock->id;
+            $candle->save();
+            print_r($candle);
+        }
+        catch (TIException $e) {
+            echo($e->getMessage());
+        }
+    }
 
-        $candle = new Candle();
-        $candle->prcopen = $TIcandle->getOpen();
-        $candle->prcclose = $TIcandle->getClose();
-        $candle->prcmin = $TIcandle->getLow();
-        $candle->prcmax = $TIcandle->getHigh();
-        $candle->tradevolume = $TIcandle->getVolume();
-        $candle->timeq = $TIcandle->getTime();
-        $candle->stock_id = $stock_id;
-        $candle->save();
+    public function toSeconds($interval) {
+        $change = ['1min' => 60, '2min' => 120, '3min' => 180, '5min' => 300, '10min' => 600, '15min' => 900, '30min' =>
+        1800, 'hour' => 3600, 'day' => 86400, 'week' => 604800, 'month' => 2592000];
+        return $change[$interval];
     }
 
     public function checkStocks()
     {
-        $users = User::findAll() // Получаем массив всех юзеров, сортируя по id.
-        ->orderBy('id');
-
+        $users = User::find()->all(); // Получаем массив всех юзеров
+        $result = [];
         foreach ($users as $user)
         {
-            $stocks = $user->getStock();
-            foreach ($stocks as $stock)
-            {
-                $candles = $stock->getCandle();
-                $latest_candle = end($candles);
-                if (time() - $latest_candle->timeq > $stock->interval)
-                {
-                    self::addCandle($latest_candle->stock_id, $stock->interval, $user->token);
-                    $candles = $stock->getCandle();
+            $stocks = Stock::find()->where(['user_id' => $user->id])->all();
+            foreach ($stocks as $stock) {
+                if ($stock) {
+                    $candles = Candle::find()->where(['stock_id' => $stock->id])->all();
                     $latest_candle = end($candles);
-                    if(self::isPriceShift($latest_candle, $stock->change))
-                    {
-                        $shift_percent = ($latest_candle->prcclose / $latest_candle->prcopen - 1) *100;
+                    if ($latest_candle) {
+                        if (time() - $latest_candle->timeq > $this->toSeconds($stock->interval)) {
+                            self::addCandle($latest_candle->stock_id, $this->$stock->interval, $user->token);
+                            $candles = Candle::find()->where(['stock_id' => $stock->id])->all();
+                            $latest_candle = end($candles);
+                            if (self::isPriceShift($latest_candle, $stock->change)) {
+                                $shift_percent = ($latest_candle->prcclose / $latest_candle->prcopen - 1) * 100;
+                                array_push($result, ['user' => $user, 'stock' => $stock, 'percent' => $shift_percent]);
+                            }
+                        }
+                    }
+                    else {
+                        self::addCandle($stock, $stock->interval, $user->token);
                     }
                 }
             }
         }
+        return $result;
     }
 }
 
