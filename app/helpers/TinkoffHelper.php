@@ -104,8 +104,10 @@ class TinkoffHelper
         {
             $stocks = Stock::find()->where(['user_id' => $user->id])->all();
             foreach ($stocks as $stock) {
+                $sma = 'none';
                 if ($stock) {
                     $latest_candle = $this->getLatestCandle($stock);
+
                     if (!$latest_candle) {
                         self::addCandle($stock, $stock->interval, $user->token);
                         $latest_candle = $this->getLatestCandle($stock);
@@ -121,6 +123,16 @@ class TinkoffHelper
                             $shift_percent = ($latest_candle->prcclose / $latest_candle->prcopen - 1) * 100;
                             array_push($result, ['user' => $user, 'stock' => $stock, 'percent' => $shift_percent]);
                         }
+                    }
+                    if ($candles = Candle::find()->where(['stock_id' => $stock->id])->count() >= $stock->period)
+                    {
+                        $candles = Candle::find()->where(['stock_id' => $stock->id])->all();
+                        $latest_candle = $this->getLatestCandle($stock);
+                        $last_n_candles = array_slice(-$stock->period);
+                        $average = array_sum($last_n_candles)/count($last_n_candles);
+                        if ($latest_candle->prcclose - $average > 0) $sma = 'up';
+                        if ($latest_candle->prcclose - $average < 0) $sma = 'down';
+                        array_push($result, ['sma' => $sma]);
                     }
                 }
             }
