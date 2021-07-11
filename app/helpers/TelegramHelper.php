@@ -11,12 +11,10 @@ class TelegramHelper
 
         $message = $this->getUpdates();
         if ($message != null) {
-            if (substr($message['text'], 0, 1) === '/') {
-                $matches = explode(' ', $message['text']);
-                $command_name = substr($matches[0], 1);
-                $parameters = array_slice($matches, 1);
-                return ['id_telegram' => $message['id_telegram'], 'command_name' => $command_name, 'parameters' => $parameters];
-            }
+            $matches = explode(' ', $message['text']);
+            $command_name = substr($matches[0], 1);
+            $parameters = array_slice($matches, 1);
+            return ['id_telegram' => $message['id_telegram'], 'command_name' => $command_name, 'parameters' => $parameters];
         }
 
     }
@@ -53,11 +51,18 @@ class TelegramHelper
             print_r($result);
             if (!$this->isAlreadyViewed($result)) {
                 $this->lastMessageId = $result->update_id;
-
-                return [
-                    'id_telegram' => $result->message->from->id,
-                    'text' => $result->message->text
-                ];
+                if (isset($result->message)) {
+                    return [
+                        'id_telegram' => $result->message->from->id,
+                        'text' => $result->message->text
+                    ];
+                }
+                else {
+                    return [
+                        'id_telegram' => $result->my_chat_member->from->id,
+                        'text' => '/stop',
+                    ];
+                }
             }
         }
     }

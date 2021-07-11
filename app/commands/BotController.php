@@ -35,6 +35,9 @@ class BotController extends Controller
                 if ($command['command_name'] == 'start') {
                     $telegram->sendMessage('Вы уже зарегистрированы. Напишите /help, чтобы получить список команд.', $command['id_telegram']);
                 }
+                elseif ($command['command_name'] == 'stop') {
+                    $user->delete();
+                }
                 elseif ($command['command_name'] == 'token' && count($command['parameters']) == 1) {
                     $token = $command['parameters'][0];
                     $tinkoff->isTokenLegit($token);
