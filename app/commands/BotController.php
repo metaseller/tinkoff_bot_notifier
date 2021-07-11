@@ -181,12 +181,12 @@ class BotController extends Controller
             $this->interpretCommand($telegram, $tinkoff, $command);
             $results = $tinkoff->checkStocks();
             foreach ($results as $result) {
-                if ($result['percent']) {
+                if (array_key_exists('percent', $result)) {
                     $message = 'Цена акции ' . $result['stock']->ticker . ' изменилась на '
                         . round($result['percent'], 2) . '% за интервал ' . $result['stock']->interval . '!';
                     $telegram->sendMessage($message, $result['user']->iduser);
                 }
-                if ($result['sma']) {
+                if (array_key_exists('sma', $result)) {
                     if ($result['sma'] == 'up') {
                         $message = 'Цена акции ' . $result['stock']->ticker . ' теперь выше скользящей средней!';
                         $telegram->sendMessage($message, $result['user']->iduser);
