@@ -181,9 +181,21 @@ class BotController extends Controller
             $this->interpretCommand($telegram, $tinkoff, $command);
             $results = $tinkoff->checkStocks();
             foreach ($results as $result) {
-                $message = 'Цена акции '. $result['stock']->ticker . ' изменилась на '
-                    . round($result['percent'], 2) . '% за интервал ' . $result['stock']->interval .'!';
-                $telegram->sendMessage($message, $result['user']->iduser);
+                if ($result['percent']) {
+                    $message = 'Цена акции ' . $result['stock']->ticker . ' изменилась на '
+                        . round($result['percent'], 2) . '% за интервал ' . $result['stock']->interval . '!';
+                    $telegram->sendMessage($message, $result['user']->iduser);
+                }
+                if ($result['sma']) {
+                    if ($result['sma'] == 'up') {
+                        $message = 'Цена акции ' . $result['stock']->ticker . ' теперь выше скользящей средней!';
+                        $telegram->sendMessage($message, $result['user']->iduser);
+                    }
+                    elseif ($result['sma'] == 'down') {
+                        $message = 'Цена акции ' . $result['stock']->ticker . ' теперь ниже скользящей средней!';
+                        $telegram->sendMessage($message, $result['user']->iduser);
+                    }
+                }
             }
             sleep(self::CONST_TIME_DELAY_REQUEST);
         }

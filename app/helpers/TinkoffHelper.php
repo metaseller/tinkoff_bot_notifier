@@ -128,12 +128,14 @@ class TinkoffHelper
                     {
                         $candles = Candle::find()->where(['stock_id' => $stock->id])->all();
                         $latest_candle = $this->getLatestCandle($stock);
-                        $last_n_candles = array_slice(-$stock->period);
+                        $last_n_candles = array_slice($candles, -$stock->period);
                         $average = array_sum($last_n_candles)/count($last_n_candles);
-                        if ($latest_candle->prcclose - $average > 0) $sma = 'up';
-                        if ($latest_candle->prcclose - $average < 0) $sma = 'down';
-                        array_push($result, ['sma' => $sma]);
+                        if ($latest_candle->prcclose) {
+                            if ($latest_candle->prcclose - $average > 0) $sma = 'up';
+                            if ($latest_candle->prcclose - $average < 0) $sma = 'down';
+                        }
                     }
+                    array_push($result, ['user' => $user, 'stock' => $stock, 'sma' => $sma]);
                 }
             }
         }
