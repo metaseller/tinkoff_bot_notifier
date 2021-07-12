@@ -131,8 +131,8 @@ class TinkoffHelper
                         $last_n_candles = array_slice($candles, -$stock->period);
                         $average = array_sum($last_n_candles)/count($last_n_candles);
                         if ($latest_candle->prcclose) {
-                            if ($latest_candle->prcclose - $average > 0) $sma = 'up';
-                            if ($latest_candle->prcclose - $average < 0) $sma = 'down';
+                            if ($latest_candle->prcclose - $average > 0 && $last_n_candles[count($last_n_candles)-2]->prcclose - $average < 0) $sma = 'up';
+                            if ($latest_candle->prcclose - $average < 0 && $last_n_candles[count($last_n_candles)-2]->prcclose - $average > 0) $sma = 'down';
                         }
                     }
                     array_push($result, ['user' => $user, 'stock' => $stock, 'sma' => $sma]);
