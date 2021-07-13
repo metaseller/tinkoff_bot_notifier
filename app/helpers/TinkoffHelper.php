@@ -116,7 +116,9 @@ class TinkoffHelper
                             array_push($result, ['user' => $user, 'stock' => $stock, 'percent' => $shift_percent]);
                         }
                     }
-                    if (time() - strtotime($latest_candle->timeq) > $this->toSeconds($stock->interval)) {
+                    $date_now = new DateTime();
+                    $date_now->sub($latest_candle->timeq);
+                    if ($date_now > date_interval_create_from_date_string($stock->interval)) {
                         self::addCandle($stock, $stock->interval, $user->token);
                         $latest_candle = $this->getLatestCandle($stock);
                         if (self::isPriceShift($latest_candle, $stock->change)) {
