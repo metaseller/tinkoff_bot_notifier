@@ -56,7 +56,7 @@ class TelegramHelper
                         'text' => $result->message->text
                     ];
                 }
-                else {
+                elseif (isset($result->my_chat_member)) {
                     return [
                         'id_telegram' => $result->my_chat_member->from->id,
                         'text' => '/stop',
