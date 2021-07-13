@@ -3,6 +3,7 @@ namespace app\helpers;
 
 use DateInterval;
 use DateTime;
+use DateTimeImmutable;
 use Exception;
 use \jamesRUS52\TinkoffInvest\TIClient;
 use jamesRUS52\TinkoffInvest\TIException;
@@ -16,6 +17,14 @@ use \app\models\Stock;
 
 class TinkoffHelper
 {
+    function dateIntervalToSeconds($dateInterval)
+    {
+        $reference = new DateTimeImmutable;
+        $endTime = $reference->add($dateInterval);
+
+        return $endTime->getTimestamp() - $reference->getTimestamp();
+    }
+
     public function isTokenLegit($tinkoff_token) {
         try {
             $client = new TIClient($tinkoff_token, TISiteEnum::SANDBOX);
@@ -69,7 +78,7 @@ class TinkoffHelper
                 $candle->prcmin = $TIcandle->getLow();
                 $candle->prcmax = $TIcandle->getHigh();
                 $candle->tradevolume = $TIcandle->getVolume();
-                $candle->timeq = $TIcandle->getTime()->format('Y-m-d H:i:s');
+                $candle->timeq = $now->format('Y-m-d H:i:s');
                 $candle->stock_id = $stock->id;
                 $candle->save();
             }
@@ -92,7 +101,7 @@ class TinkoffHelper
     }
 
     public function getLatestCandle($stock) {
-        $candles = Candle::find()->where(['stock_id' => $stock->id])->all();
+        $candles = Candle::find()->where(['stock_id' => $stock->id])->orderBy(['timeq'=>'SORT_ASC'])->all();
         return end($candles);
     }
 
@@ -116,7 +125,10 @@ class TinkoffHelper
                             array_push($result, ['user' => $user, 'stock' => $stock, 'percent' => $shift_percent]);
                         }
                     }
-                    if (time() - strtotime($latest_candle->timeq) > $this->toSeconds($stock->interval)) {
+                    $date = new DateTime($latest_candle->timeq);
+                    $now = new DateTime('now');
+                    $diff = $now->diff($date);
+                    if (-$this->dateIntervalToSeconds($diff) > $this->toSeconds($stock->interval)) {
                         self::addCandle($stock, $stock->interval, $user->token);
                         $latest_candle = $this->getLatestCandle($stock);
                         if (self::isPriceShift($latest_candle, $stock->change)) {
