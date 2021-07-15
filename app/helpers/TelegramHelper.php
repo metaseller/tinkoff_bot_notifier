@@ -19,7 +19,7 @@ class TelegramHelper
 
     }
 
-    public function sendMessage($textMessage = "This is my message !!!", $chatId = 442912517) {
+    public function sendMessage($textMessage = "default message", $chatId) {
 
         $website = "https://api.telegram.org/bot" . $this->botToken;
         $params = [
